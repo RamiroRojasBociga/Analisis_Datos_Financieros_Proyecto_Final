@@ -21,14 +21,30 @@ st.markdown(
     /* Fondo principal y textos */
     .stApp { background-color: #0F172A; font-family: 'Inter', sans-serif; }
     h1, h2, h3, h4 { color: #F8FAFC !important; font-family: 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.5px;}
-    p, span, div, label { color: #94A3B8; font-family: 'Inter', sans-serif; font-weight: 400;}
+    p, span, div, label { color: #F8FAFC !important; font-family: 'Inter', sans-serif; font-weight: 400;}
     
-    /* Contenedores Inputs */
-    .stSelectbox div[data-baseweb="select"], .stMultiSelect div[data-baseweb="select"] {
-        border: 1px solid #334155 !important;
-        background-color: #1E293B !important;
-        border-radius: 8px !important;
-        color: #F8FAFC !important;
+    /* Contenedores Inputs y Textos de Dropdown */
+    div[data-testid="stSelectbox"] *, div[data-testid="stMultiSelect"] * {
+        color: #0F172A !important; /* Texto oscuro de alto contraste */
+    }
+    
+    /* Popover (Lista desplegable que flota sobre la app) */
+    div[data-baseweb="popover"] *, ul[role="listbox"] * {
+        color: #0F172A !important; /* Fuerza las opciones a ser oscuras */
+        font-weight: 500;
+    }
+    
+    /* Fondo Hover de la lista para que se note al pasar el mouse */
+    ul[role="listbox"] li:hover, ul[role="listbox"] li[aria-selected="true"] {
+        background-color: #E2E8F0 !important;
+    }
+    
+    /* Tags seleccionados en MultiSelect */
+    span[data-baseweb="tag"] {
+        background-color: #2563EB !important;
+    }
+    span[data-baseweb="tag"] span {
+        color: #FFFFFF !important; /* Texto blanco en las etiquetas azules */
     }
     .stSlider > div { color: #3B82F6; }
     
@@ -258,7 +274,7 @@ with tab3:
     col_p1, col_p2 = st.columns(2)
     col_p1.metric(f"Días Consecutivos (3) al Alza", detect_consecutive_up_days(asset_closes, 3))
     col_p2.metric(f"Patrón de Reversión en V (Morning Star)", detect_reversal_v_pattern(asset_rows))
-    st.info("**Formalización Matemática del Patrón Adicional (Req. 3):** Se define un *Patrón de Reversión en V* para una ventana temporal $T$ cuando ocurren tres días consecutivos de caídas ($C_{t} < O_{t}$ para $t \in \{T-3, T-2, T-1\}$) seguidos inmediatamente por un día de fuerte recuperación alcista ($C_T > O_{T-1}$). Esto se calcula algorítmicamente mediante el recorrido en ventana deslizante en tiempo $\mathcal{O}(N)$.")
+    st.info(r"**Formalización Matemática del Patrón Adicional (Req. 3):** Se define un *Patrón de Reversión en V* para una ventana temporal $T$ cuando ocurren tres días consecutivos de caídas ($C_{t} < O_{t}$ para $t \in \{T-3, T-2, T-1\}$) seguidos inmediatamente por un día de fuerte recuperación alcista ($C_T > O_{T-1}$). Esto se calcula algorítmicamente mediante el recorrido en ventana deslizante en tiempo $\mathcal{O}(N)$.")
     
     st.markdown("---")
     st.markdown("### 3. Optimizador de Portafolio O(N) Fuerza Bruta (Sharpe Ratio)")
@@ -318,22 +334,29 @@ with tab4:
         
         if algoritmo == "Distancia Euclidiana":
             val, req_complexy = euclidean_distance(a1_norm.tolist(), a2_norm.tolist())
-            math_formula = r"$$ d(x, y) = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2} $$"
-            algo_desc = "Itera sobre ambos vectores tramo a tramo $\mathcal{O}(N)$, acumulando el cuadrado de las diferencias de las observaciones normalizadas y aplicando la raíz cuadrada al sumatorio total. Útil para medir cercanía absoluta."
+            math_formula = r"\Large d_{Euc}(X, Y) = \sqrt{\sum_{t=1}^{T} (X_t - Y_t)^2}"
+            algo_desc = r"**Mecánica Numérica:** Evalúa la similitud comparando la diferencia de precios 'día a día' en una iteración secuencial a lo largo de toda la historia temporal $\mathcal{O}(N)$. En términos matemáticos, halla la distancia espacial en cada fecha $t$, la eleva al cuadrado (para evitar la cancelación de diferencias negativas y positivas, y para penalizar fuertemente las brechas extremas), luego consolida sumando estas magnitudes y extrayendo la raíz cuadrada geométrica total. Este método es excepcionalmente estricto frente al alineamiento temporal absoluto."
+            interp_desc = r"Es una métrica directa de **diferencia absoluta espacial** y distancia directa entre trayectorias. <br><br>👉 **Si es 0:** Las gráficas de ambos activos son calcos idénticos, se superponen perfectamente sin ningún margen de error. <br>👉 **Entre 0 y 5 (En Datos Normalizados/Z-Score):** Existe un altísimo nivel de sincronía de mercado; las curvas mantienen formas muy similares y caminan cerca. <br>👉 **Mayor a 15:** Denota una fuerte **divergencia espacial**. Indica que un activo puede estar experimentando un mercado fuertemente alcista (bull market) mientras el otro sufre caídas."
+            
         elif algoritmo == "Correlación de Pearson":
             val, req_complexy = pearson_correlation(a1_norm.tolist(), a2_norm.tolist())
-            math_formula = r"$$ r = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum (x_i - \bar{x})^2} \sqrt{\sum (y_i - \bar{y})^2}} $$"
-            algo_desc = "Mide la relación lineal paralela de los rendimientos. Calcula las co-variaciones cruzadas restando las medias aritméticas y dividiendo por sus desviaciones cruzadas iterando secuencialmente $\mathcal{O}(N)$."
+            math_formula = r"\Large \rho_{X,Y} = \frac{\sum_{t=1}^{T} (X_t - \bar{X})(Y_t - \bar{Y})}{\sqrt{\sum_{t=1}^{T} (X_t - \bar{X})^2} \sqrt{\sum_{t=1}^{T} (Y_t - \bar{Y})^2}}"
+            algo_desc = r"**Mecánica Numérica:** Cuantifica la fuerza y dirección de la relación **lineal** entre dos variables a lo largo de $T$ iteraciones $\mathcal{O}(N)$. Primero, evalúa el comportamiento de cada activo frente a su propia media histórica o 'centro de gravedad' $\bar{X}$. Luego, cruza estos deltas direccionales para ver si los dos suben o bajan al mismo tiempo, y estandariza el producto resultante usando la volatilidad cruzada para aislar la fuerza estructural sin importar el tamaño absoluto del precio."
+            interp_desc = r"Es el estándar de oro en finanzas y econometría para analizar co-movimientos, con un rango matemático estricto de **[-1.0, 1.0]**. <br><br>👉 **1.0 (Correlación Positiva Perfecta):** Si X sube un 2%, Y también sube de manera predecible. Es un tándem ideal y denotan que pertenecen al mismo nicho o industria. <br>👉 **-1.0 (Correlación Negativa Perfecta):** Son activos **inversamente proporcionales**. Si el mercado colapsa y X se hunde, Y experimentará subidas agresivas. Matemáticamente, es el escenario de ensueño para **estrategias de cobertura (hedging) y diversificación sistemática de riesgo**. <br>👉 **0.0:** Ausencia total de patrón lineal predecible; sus movimientos son estadísticamente independientes, ideales para reducir la volatilidad general de un portafolio."
+            
         elif algoritmo == "Similitud Coseno":
             val, req_complexy = cosine_similarity(a1_norm.tolist(), a2_norm.tolist())
-            math_formula = r"$$ \text{cos}(\theta) = \frac{\sum x_i y_i}{\sqrt{\sum x_i^2} \sqrt{\sum y_i^2}} $$"
-            algo_desc = "Evalúa la direccionalidad pura ignorando la magnitud calculando el producto punto de los vectores y normalizándolo $\mathcal{O}(N)$. Perfecto para evaluar momentos direccionales paralelos."
+            math_formula = r"\Large \text{Similitud}_{Coseno}(X, Y) = \frac{\sum_{t=1}^{T} X_t \cdot Y_t}{\sqrt{\sum_{t=1}^{T} X_t^2} \sqrt{\sum_{t=1}^{T} Y_t^2}}"
+            algo_desc = r"**Mecánica Numérica:** Transforma toda la serie temporal de cada activo en un gigantesco vector geométrico $N$-dimensional. Mediante un recorrido iterativo simple $\mathcal{O}(N)$, computa el **producto escalar (dot product)** y lo divide por las magnitudes euclidianas. A diferencia de Pearson o Euclidiana, el algoritmo del Coseno abstrae por completo la magnitud (la agresividad o tamaño de la caída o subida) y enfoca el 100% de la evaluación en la 'dirección del viento' temporal."
+            interp_desc = r"Mide estrictamente el **ángulo de orientación** entre las tendencias de inversión en un espacio multi-dimensional. <br><br>👉 **Si es 1.0:** Tienen una tendencia direccional idéntica. Apuntan hacia el mismo norte independientemente de qué tan agresivos o volátiles sean sus rendimientos diarios. <br>👉 **Si es 0.0:** Los vectores son matemáticamente ortogonales (forman un ángulo perfecto de 90 grados). Representan instrumentos en nichos de mercado completamente aislados que no se inmutan por lo que le pase al otro activo. <br>👉 **Si es -1.0:** Tienen direcciones estrictamente opuestas (ángulo de 180 grados)."
+            
         elif algoritmo == "DTW (Dynamic Time Warping)":
             st.warning("Calculando Costo DTW en los últimos 250 días para evitar saturación de memoria O(N²).")
             # DTW en matrix nativa requiere listas planas
             val, req_complexy = dtw_distance(a1_norm[-250:].tolist(), a2_norm[-250:].tolist())
-            math_formula = r"$$ DTW(X, Y) = \min_W \sqrt{\sum_{k=1}^K w_k} \quad (\text{Camino de Costo Mínimo}) $$"
-            algo_desc = "Resuelve mediante Programación Dinámica $\mathcal{O}(N^2)$ creando una matriz de distancias locales acopladas temporalmente permitiendo elasticidad (las curvas pueden estar desfasadas)."
+            math_formula = r"\Large DTW(X, Y) = \min_W \sqrt{\sum_{k=1}^K w_k} \quad (\text{Camino de Costo Mínimo})"
+            algo_desc = r"**Mecánica Numérica:** Aborda el análisis de similitud utilizando el paradigma de **Programación Dinámica Computacional** construyendo una inmensa matriz cruzada de costos espaciales en tiempo cuadrático $\mathcal{O}(N^2)$. Su máximo valor algorítmico radica en su propiedad de 'warping' (deformación elástica temporal). A diferencia de Euclidiana que exige comparar el 'Lunes de X' estrictamente con el 'Lunes de Y', DTW es elástico. Es capaz de asociar una fuerte caída del Activo A ocurrida un Lunes, con la caída reactiva del Activo B ocurrida el Miércoles, iterando hasta encontrar el camino matricial de mínimo esfuerzo para mapear ambas topologías."
+            interp_desc = r"Es una métrica orientada puramente a **patrones estructurales y ciclos de retraso**, cuantificando el 'costo morfológico de deformación'. <br><br>👉 **Si es 0:** Las formas son idénticas y sin absolutamente ningún desfase temporal de sincronización. <br>👉 **Costos Bajos (Ej: < 10):** Revela que los activos se comportan igual y dibujan gráficas casi idénticas, pero sufren de **ecos o desfases en el tiempo** temporales causados por ineficiencias del mercado, diferencias en husos horarios de apertura, o rezagos en la absorción de información macroeconómica. <br>👉 **Costos Altos:** Denota que ni estirando, pausando ni comprimiendo temporalmente los eventos se logra alinear el comportamiento de los mercados subyacentes."
             
         st.success(f"**Cálculo Completado**: Métrica de {algoritmo} obtenida.")
         
@@ -341,7 +364,8 @@ with tab4:
         with st.expander("📚 Explicación Matemática y Algorítmica", expanded=True):
             st.latex(math_formula)
             st.markdown(f"**Fundamento Algorítmico:** {algo_desc}")
-            st.markdown(f"**Complejidad Big-O:** `{req_complexy}` calculada sobre las bases canónicas nativas de Python.")
+            st.markdown(f"**Complejidad de Cómputo (Big-O):** `{req_complexy}` calculada sobre las bases de datos nativas.")
+            st.info(f"**💡 ¿Cómo interpretar este número?** \n\n{interp_desc}")
             st.metric(f"Valor Resultante ({algoritmo})", f"{val:.4f}")
         
         # Graficamos la serie
