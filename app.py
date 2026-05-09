@@ -87,9 +87,10 @@ st.markdown(
 hud_layout = dict(
     paper_bgcolor='rgba(0,0,0,0)', 
     plot_bgcolor='rgba(0,0,0,0)',
-    font=dict(family="Inter, sans-serif", color="#94A3B8"),
+    font=dict(family="Inter, sans-serif", color="#F8FAFC"), # Blanco brillante para mejor legibilidad
     xaxis=dict(showgrid=True, gridcolor='#334155', zerolinecolor='#475569'),
-    yaxis=dict(showgrid=True, gridcolor='#334155', zerolinecolor='#475569')
+    yaxis=dict(showgrid=True, gridcolor='#334155', zerolinecolor='#475569'),
+    legend=dict(font=dict(color="#FFFFFF")) # Forzar leyendas a color blanco
 )
 
 @st.cache_data

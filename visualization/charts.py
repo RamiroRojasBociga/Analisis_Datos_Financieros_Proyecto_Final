@@ -212,7 +212,7 @@ def generate_volume_chart(activos_top_volumen):
             h1 { text-align: center; color: #d2a8ff; }
             h2 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 5px; }
             .bar-row { display: flex; align-items: center; margin-bottom: 8px; }
-            .label { width: 120px; font-weight: bold; font-size: 12px; text-align: right; margin-right: 15px; color: #8b949e; }
+            .label { width: 120px; font-weight: bold; font-size: 12px; text-align: right; margin-right: 15px; color: #ffffff; }
             .bar-wrapper { flex-grow: 1; background: #21262d; border-radius: 4px; overflow: hidden; height: 20px; position: relative; }
             .bar { height: 100%; background: linear-gradient(90deg, #8957e5, #d2a8ff); transition: width 0.5s ease; }
             .time-label { position: absolute; right: 10px; top: 0; line-height: 20px; font-size: 11px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; }
